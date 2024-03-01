@@ -1,4 +1,4 @@
-Name,Framework,Description,Implementation,Techniques
+Technique Name,Framework,Description,Implementation,Techniques
 Dump credentials from LSASS,cobalt-strike,"This technique injects into the LSASS.exe process and scrapes its memory for plaintext passwords of logged on users. You must do this from a high integrity process. 
 The Mimikatz project has a lot of different capabilities (https://github.com/gentilkiwi/mimikatz/wiki) such as pass-the-hash, pass-the-ticket, creating silver/golden tickets, dumping credentials, and elevating a process.","logonpasswords
 mimikatz !sekurlsa::logonpasswords
